@@ -1,0 +1,26 @@
+# Executable files
+*.exe
+*.out
+
+# Object files
+*.o
+*.obj
+
+# Temporary files
+*.tmp
+*.temp
+
+# C/C++ build folders
+build/
+bin/
+Debug/
+Release/
+
+# Program-generated files
+users.txt
+temp.txt
+backup.txt
+
+# IDE files
+.vscode/
+.idea/
