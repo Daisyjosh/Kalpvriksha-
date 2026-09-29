@@ -174,8 +174,5 @@ int main(){
     if(!error){
         printf("%d\n",result);
     }
-    else{
-        return 0;
-    }
     return 0;
 }
