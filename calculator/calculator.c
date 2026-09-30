@@ -2,40 +2,56 @@
 #include <string.h>
 #include <ctype.h>
 
-int validate(char arr[]){
+int validate(char expression[]){
     
-    int expectingNumber = 1;
-    for(int i = 0; arr[i] != '\0'; i++){
-        if(isalpha(arr[i])){
+    int expecting_number = 1;
+    for(int index = 0; expression[index] != '\0'; index++){
+        if(isalpha(expression[index])){
             printf("Error: Invalid expression.\n");
             return 0;
         }
-        else if(isdigit(arr[i])){
-            if(!expectingNumber){
+        else if(isdigit(expression[index])){
+            if(!expecting_number){
                 printf("Error: Invalid expression.\n");
                 return 0;
             }
-            while(isdigit(arr[i])){
-                i++;
+            while(isdigit(expression[index])){
+                index++;
             }
-            i--;
-            expectingNumber = 0;
+            index--;
+            expecting_number = 0;
         }
-        else if(arr[i] == '+' || arr[i] == '-' || arr[i] == '*' || arr[i] == '/'){
-            if(expectingNumber){
+        else if(expression[index] == '-' && expecting_number){
+
+            index++;
+
+            if(!isdigit(expression[index])){
                 printf("Error: Invalid expression.\n");
                 return 0;
             }
-            expectingNumber = 1;
+
+            while(isdigit(expression[index])){
+                index++;
+            }
+
+            index--;
+            expecting_number = 0;
         }
-        else if((!(isdigit(arr[i]))) && (!(isspace(arr[i]))) && (arr[i] != '*' && arr[i] != '/' && arr[i] != '+' && arr[i] != '-')){
+        else if(expression[index] == '+' || expression[index] == '-' || expression[index] == '*' || expression[index] == '/'){
+            if(expecting_number){
+                printf("Error: Invalid expression.\n");
+                return 0;
+            }
+            expecting_number = 1;
+        }
+        else if((!(isdigit(expression[index]))) && (!(isspace(expression[index]))) && (expression[index] != '*' && expression[index] != '/' && expression[index] != '+' && expression[index] != '-')){
             printf("Error: Invalid expression.\n");
             return 0;
         }
-        
+          
     }
     
-    if(expectingNumber){
+    if(expecting_number){
         printf("Error: Invalid expression.\n");
         return 0;
     }
@@ -43,136 +59,154 @@ int validate(char arr[]){
     return 1;
 }
 
-int parse_operator(char arr[],char OpArr[]){
-    int count = 0;
-    for(int i=0; arr[i] != '\0'; i++){
-        if(arr[i] == '+' || arr[i] == '-' || arr[i] == '*' || arr[i] == '/'){
-            OpArr[count] = arr[i];
-            count++;
+int parse_operator(char expression[], char operator_array[]){
+
+    int operator_count = 0;
+    int expecting_number = 1;
+    for(int index = 0; expression[index] != '\0'; index++){
+        if(isdigit(expression[index])){
+            while(isdigit(expression[index])){
+                index++;
+            }
+            index--;
+            expecting_number = 0;
+        }
+        else if(expression[index] == '-' && expecting_number){
+            index++;
+            while(isdigit(expression[index])){
+                index++;
+            }
+            index--;
+            expecting_number = 0;
+        }
+        else if(expression[index] == '+' || expression[index] == '-' || expression[index] == '*' || expression[index] == '/'){
+            operator_array[operator_count] = expression[index];
+            operator_count++;
+            expecting_number = 1;
         }
     }
-    // printf("Operators: \n");
-    // for(int i=0; i<count; i++){
-    //     printf("%c ",OpArr[i]);
-    // }
-    // printf("\n");
-    return count;
-}  
+    return operator_count;
+}
+int parse_number(char expression[], long long number_array[]){
 
-int parse_number(char arr[],int numArr[]){
-    int num = 0;
-    int flag = 0;
-    int count = 0;
-    for(int i=0; arr[i] != '\0'; i++){
-        if(isdigit(arr[i])){
-            num = num * 10 + (arr[i]-'0');
-            flag = 1;
+    long long number = 0;
+    int has_number = 0;
+    int number_count = 0;
+    int expecting_number = 1;
+    int is_negative = 0;
+    for(int index = 0; expression[index] != '\0'; index++){
+        if(expression[index] == '-' && expecting_number){
+            is_negative = 1;
+        }
+        else if(isdigit(expression[index])){
+            number = number * 10 + (expression[index] - '0');
+            has_number = 1;
+            expecting_number = 0;
         }
         else{
-            if(flag){
-                numArr[count] = num;
-                num = 0;
-                flag = 0;
-                count++;
+            if(has_number){
+                if(is_negative){
+                    number = -number;
+                }
+                number_array[number_count] = number;
+                number = 0;
+                is_negative = 0;
+                has_number = 0;
+                number_count++;
+            }
+            if(expression[index] == '+' || expression[index] == '-' ||
+               expression[index] == '*' || expression[index] == '/'){
+                expecting_number = 1;
             }
         }
     }
-    if(flag){
-        numArr[count] = num;
-        count++;
+    if(has_number){
+        if(is_negative){
+            number = -number;
+        }
+        number_array[number_count] = number;
+        number_count++;
     }
-    
-    // printf("Numbers:\n");
-    // for(int i = 0; i < count; i++){
-    //     printf("%d ",numArr[i]);
-    // }
-    // printf("\n");
-    return count;
+    return number_count;
 }
 
-int evaluate_expression(int numArr[], char OpArr[], int number_count, int operator_count,int *error){
-    
-    // first preference : "*" & "/"
-    
-    for(int i = 0; i < operator_count; i++){
-        if(OpArr[i] == '*'){
-            numArr[i] = numArr[i] * numArr[i+1];
-            
-            // shift remaining numbers left
-            for(int j = i+1; j < number_count-1; j++){
-                numArr[j] = numArr[j+1];
+long long evaluate_expression(long long number_array[], char operator_array[], int number_count, int operator_count, int *has_error){
+
+    for(int operator_index = 0; operator_index < operator_count; operator_index++){
+
+        if(operator_array[operator_index] == '*'){
+            number_array[operator_index] = number_array[operator_index] * number_array[operator_index + 1];
+
+            for(int number_index = operator_index + 1; number_index < number_count - 1; number_index++){
+                number_array[number_index] = number_array[number_index + 1];
             }
+
             number_count--;
-            
-            // shift remaining operators left
-            for(int j = i; j < operator_count-1; j++){
-                OpArr[j] = OpArr[j+1];
+
+            for(int shift_index = operator_index; shift_index < operator_count - 1; shift_index++){
+                operator_array[shift_index] = operator_array[shift_index + 1];
             }
-            
+
             operator_count--;
-            
-            i--;
+
+            operator_index--;
         }
-        else if (OpArr[i] == '/') {
-            if(numArr[i+1] != 0){
-                numArr[i] = numArr[i] / numArr[i + 1];
+
+        else if(operator_array[operator_index] == '/'){
+            if(number_array[operator_index + 1] != 0){
+                number_array[operator_index] = number_array[operator_index] / number_array[operator_index + 1];
             }
             else{
                 printf("Error: Division by zero.\n");
-                *error = 1;
+                *has_error = 1;
                 return 0;
             }
-            // Shift numbers
-            for (int j = i + 1; j < number_count - 1; j++) {
-                numArr[j] = numArr[j + 1];
+            for(int number_index = operator_index + 1; number_index < number_count - 1; number_index++){
+                number_array[number_index] = number_array[number_index + 1];
             }
-
             number_count--;
-
-            // Shift operators
-            for (int j = i; j < operator_count - 1; j++) {
-                OpArr[j] = OpArr[j + 1];
+            for(int shift_index = operator_index; shift_index < operator_count - 1; shift_index++){
+                operator_array[shift_index] = operator_array[shift_index + 1];
             }
-
             operator_count--;
+            operator_index--;
+        }
+    }
+    long long result = number_array[0];
+    for(int index = 0; index < operator_count; index++){
+        if(operator_array[index] == '+'){
+            result = result + number_array[index + 1];
+        }
+        else if(operator_array[index] == '-'){
+            result = result - number_array[index + 1];
+        }
+    }
+    return result;
+}
 
-            i--;
+int main(){
+    while(1){
+        char expression[100];
+        printf("Enter Expression (or type 'exit'): ");
+        fgets(expression,100,stdin);
+        if(strcmp(expression,"exit\n")==0){
+            break;
+        }
+        int is_valid = validate(expression);
+        if(!is_valid){
+            continue;
+        }
+        char operator_array[50];
+        long long number_array[50];
+        int operator_count = parse_operator(expression,operator_array);
+        int number_count = parse_number(expression,number_array);
+        int has_error = 0;
+        long long result = evaluate_expression(number_array,operator_array,number_count,operator_count,&has_error);
+        if(!has_error){
+            printf("%lld\n", result);
         }
         
     }
-    
-    // second preference: "+" & "-"
-    
-    int result = numArr[0];
-    for(int i = 0; i < operator_count; i++){
-        if (OpArr[i] == '+') {
-
-            result = result + numArr[i + 1];
-        }
-
-        else if (OpArr[i] == '-') {
-
-            result = result - numArr[i + 1];
-        }
-    }
-    
-    return result;
-}
-int main(){
-    char arr[100];
-    fgets(arr,100,stdin);
-    int valid = validate(arr);
-    if(!valid){
-        return 0;
-    }
-    char OpArr[50];
-    int numArr[50];
-    int operator_count = parse_operator(arr,OpArr);
-    int number_count = parse_number(arr,numArr);
-    int error = 0;
-    int result = evaluate_expression(numArr,OpArr,number_count,operator_count,&error);
-    if(!error){
-        printf("%d\n",result);
-    }
     return 0;
+
 }
