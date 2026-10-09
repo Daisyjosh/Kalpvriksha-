@@ -1,59 +1,102 @@
-// Time Complexity: O(N)
-// Space Complexity: O(N)
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <errno.h>
+#include <limits.h>
+
+// Time Complexity: O(N)
+// Space Complexity: O(N)
+
+#define MAX_STUDENTS 100
+#define MAX_NAME 300
+#define MAX_LINE 1024
+#define MAX_TOKENS 100
 
 struct Student{
     int roll_no;
-    char name[100];
+    char name[MAX_NAME];
     int marks[3];
 };
 
-int is_integer(char str[]){
-    int char_index = 0;
+int is_integer(const char str[]){
+    int i = 0;
 
-    if (str[0] == '\0')
+    if (str[0] == '\0'){
         return 0;
+    }
 
-    while (str[char_index] != '\0') {
-        if (!isdigit((unsigned char)str[char_index]))
+    while (str[i] != '\0'){
+        if (!isdigit((unsigned char)str[i])){
             return 0;
-        char_index++;
+        }
+        i++;
     }
 
     return 1;
 }
 
-int is_valid_name(char str[]){
-    int char_index = 0;
+int parse_roll_number(const char str[], int *roll_no){
+    char *end;
+    errno = 0;
 
-    if (str[0] == '\0')
+    if (!is_integer(str)){
         return 0;
-
-    while (str[char_index] != '\0') {
-        if (!isalpha((unsigned char)str[char_index]))
-            return 0;
-        char_index++;
     }
 
+    long value = strtol(str, &end, 10);
+
+    if (errno == ERANGE || *end != '\0' ||
+        value < 1 || value > INT_MAX){
+        return 0;
+    }
+
+    *roll_no = (int)value;
+    return 1;
+}
+
+int is_valid_name(const char str[]){
+    int i = 0;
+
+    if (str[0] == '\0'){
+        return 0;
+    }
+
+    while (str[i] != '\0'){
+        if (!isalpha((unsigned char)str[i])){
+            return 0;
+        }
+        i++;
+    }
+
+    return 1;
+}
+
+int parse_mark(const char str[], int *mark){
+    char *end;
+    errno = 0;
+
+    if (!is_integer(str)){
+        return 0;
+    }
+
+    long value = strtol(str, &end, 10);
+
+    if (errno == ERANGE || *end != '\0' ||
+        value < 0 || value > 100){
+        return 0;
+    }
+
+    *mark = (int)value;
     return 1;
 }
 
 int calculate_total(int mark1, int mark2, int mark3){
-
-    if (!((mark1 >= 0) && (mark1 <= 100)) ||
-        !((mark2 >= 0) && (mark2 <= 100)) ||
-        !((mark3 >= 0) && (mark3 <= 100))) {
-
-        printf("Error: Invalid Input.\n");
+    if (mark1 < 0 || mark1 > 100 || mark2 < 0 || mark2 > 100 ||mark3 < 0 || mark3 > 100){
         return -1;
     }
-    else {
-        return mark1 + mark2 + mark3;
-    }
+
+    return mark1 + mark2 + mark3;
 }
 
 float calculate_average(int total){
@@ -61,42 +104,39 @@ float calculate_average(int total){
 }
 
 char calculate_grade(float average){
-
-    if (average >= 85) {
+    if (average >= 85){
         return 'A';
     }
-    else if (average >= 70) {
+    else if (average >= 70){
         return 'B';
     }
-    else if (average >= 50) {
+    else if (average >= 50){
         return 'C';
     }
-    else if (average >= 35) {
+    else if (average >= 35){
         return 'D';
     }
-    else {
+    else{
         return 'F';
     }
 }
 
 void calculate_performance(char grade){
-
-    if (grade == 'A') {
+    if (grade == 'A'){
         printf("Performance: *****\n");
     }
-    else if (grade == 'B') {
+    else if (grade == 'B'){
         printf("Performance: ****\n");
     }
-    else if (grade == 'C') {
+    else if (grade == 'C'){
         printf("Performance: ***\n");
     }
-    else if (grade == 'D') {
+    else if (grade == 'D'){
         printf("Performance: **\n");
     }
 }
 
-void print_roll_numbers(int roll_numbers[], int roll_index, int total_students){
-
+void print_roll_numbers(int roll_numbers[],int roll_index,int total_students){
     if (roll_index == total_students){
         return;
     }
@@ -107,110 +147,126 @@ void print_roll_numbers(int roll_numbers[], int roll_index, int total_students){
         printf(" ");
     }
 
-    print_roll_numbers(roll_numbers, roll_index + 1, total_students);
+    print_roll_numbers(roll_numbers,roll_index + 1,total_students);
 }
 
-int main(){
-
+int main(void){
     int total_students;
-    scanf("%d", &total_students);
 
-    if (total_students <= 0 || total_students > 100){
-        printf("Error: Invalid Input.");
+    if (scanf("%d", &total_students) != 1){
+        printf("Error: Invalid Input.\n");
         return 0;
     }
 
-    int roll_numbers[100];
-    int totals[100];
-    float averages[100];
-    char grades[100];
-    struct Student students[100];
+    if (total_students <= 0 ||total_students > MAX_STUDENTS){
+        printf("Error: Invalid Input.\n");
+        return 0;
+    }
 
-    getchar();
+    int roll_numbers[MAX_STUDENTS];
+    int totals[MAX_STUDENTS];
+    float averages[MAX_STUDENTS];
+    char grades[MAX_STUDENTS];
+    struct Student students[MAX_STUDENTS];
 
     int student_count = 0;
+    int ch;
 
-    for (int student_index = 0; student_index < total_students; student_index++){
+    while ((ch = getchar()) != '\n' && ch != EOF){
+        if (!isspace((unsigned char)ch)){
+            printf("Error: Invalid Input.\n");
+            return 0;
+        }
+    }
 
-        char line[200];
-        char *tokens[50];
+    for (int i = 0; i < total_students; i++){
+        char line[MAX_LINE];
+        char *tokens[MAX_TOKENS];
         int token_count = 0;
 
-        struct Student student;
+        struct Student student = {0};
 
         if (fgets(line, sizeof(line), stdin) == NULL){
             printf("Error: Invalid Input.\n");
             return 0;
         }
 
-        char *token = strtok(line, " \n");
+        if (strchr(line, '\n') == NULL && !feof(stdin)){
+            while ((ch = getchar()) != '\n' && ch != EOF){
+            }
 
-        while (token != NULL){
-            tokens[token_count] = token;
-            token_count++;
-            token = strtok(NULL, " \n");
-        }
-
-        if (token_count < 5){
-            printf("Invalid input\n");
-            return 0;
-        }
-
-        if (!is_integer(tokens[0])){
             printf("Error: Invalid Input.\n");
             return 0;
         }
 
-        student.roll_no = atoi(tokens[0]);
+        char *token = strtok(line, " \t\r\n");
 
-        int marks_start_index = token_count - 3;
+        while (token != NULL){
+            if (token_count >= MAX_TOKENS){
+                printf("Error: Invalid Input.\n");
+                return 0;
+            }
 
-        if (!is_integer(tokens[marks_start_index]) ||
-            !is_integer(tokens[marks_start_index + 1]) ||
-            !is_integer(tokens[marks_start_index + 2])){
+            tokens[token_count++] = token;
+            token = strtok(NULL, " \t\r\n");
+        }
 
-            printf("Invalid input: marks must be integers\n");
+        if (token_count < 5){
+            printf("Error: Invalid Input.\n");
             return 0;
         }
 
-        student.marks[0] = atoi(tokens[marks_start_index]);
-        student.marks[1] = atoi(tokens[marks_start_index + 1]);
-        student.marks[2] = atoi(tokens[marks_start_index + 2]);
+        if (!parse_roll_number(tokens[0], &student.roll_no)){
+            printf("Error: Invalid Input.\n");
+            return 0;
+        }
 
-        int total = calculate_total(
-            student.marks[0],
-            student.marks[1],
-            student.marks[2]
-        );
+        int marks_start_index = token_count - 3;
+
+        for (int j = 0; j < 3; j++){
+            if (!parse_mark(tokens[marks_start_index + j],&student.marks[j])){
+                printf("Error: Invalid Input.\n");
+                return 0;
+            }
+        }
+
+        int total = calculate_total(student.marks[0],student.marks[1],student.marks[2]);
 
         if (total == -1){
-            printf("Invalid Input");
+            printf("Error: Invalid Input.\n");
             return 0;
         }
 
         float average = calculate_average(total);
         char grade = calculate_grade(average);
 
-        student.name[0] = '\0';
+        size_t name_length = 0;
 
-        for (int token_index = 1; token_index < marks_start_index; token_index++){
-
-            if (!is_valid_name(tokens[token_index])){
+        for (int j = 1; j < marks_start_index; j++){
+            if (!is_valid_name(tokens[j])){
                 printf("Error: Invalid Input.\n");
                 return 0;
             }
 
-            strcat(student.name, tokens[token_index]);
+            size_t token_length = strlen(tokens[j]);
+            size_t space_length = (j > 1) ? 1 : 0;
 
-            if (token_index < marks_start_index - 1){
-                strcat(student.name, " ");
+            if (name_length + space_length + token_length>= sizeof(student.name)){
+                printf("Error: Invalid Input.\n");
+                return 0;
             }
+
+            if (space_length){
+                student.name[name_length++] = ' ';
+            }
+
+            memcpy(student.name + name_length, tokens[j], token_length);
+            name_length += token_length;
+            student.name[name_length] = '\0';
         }
 
-        int name_length = strlen(student.name);
-
-        if (name_length <= 0 || name_length >= 100){
-            printf("Error: Invalid Input");
+        if (name_length == 0){
+            printf("Error: Invalid Input.\n");
             return 0;
         }
 
@@ -224,7 +280,6 @@ int main(){
     }
 
     for (int student_index = 0; student_index < student_count; student_index++){
-
         printf("Roll: %d\n", students[student_index].roll_no);
         printf("Name: %s\n", students[student_index].name);
         printf("Total: %d\n", totals[student_index]);
@@ -232,10 +287,11 @@ int main(){
         printf("Grade: %c\n", grades[student_index]);
 
         if (grades[student_index] == 'F'){
+            printf("\n");
             continue;
         }
-
         calculate_performance(grades[student_index]);
+
         printf("\n");
     }
 
