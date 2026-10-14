@@ -1,3 +1,6 @@
+// Time Complexity: O(n)
+// Space Complexity: O(1)
+
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
@@ -108,6 +111,10 @@ int main(void){
     char category[50];
     find_category(category_choice,category);
     float subtotal = calculate_subtotal(category_choice,number_of_tickets);
+    if(subtotal < 0){
+        printf("Error: Invalid Category.\n");
+        return 0;
+    }
     bool discount = calculate_discount(number_of_tickets);
     float final_bill = calculate_final_bill(subtotal,discount);
     float discount_amount = subtotal - final_bill;
@@ -119,8 +126,6 @@ int main(void){
     printf("Subtotal: %.2f\n",subtotal);
     printf("Discount: %.2f\n",discount_amount);
     printf("Final Bill: %.2f\n",final_bill);
-    
-        
     
     return 0;
 }
