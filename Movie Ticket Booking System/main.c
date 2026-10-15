@@ -115,8 +115,7 @@ int main(void){
         printf("Error: Invalid Category.\n");
         return 0;
     }
-    bool is_discount_applicable = calculate_discount(number_of_tickets);
-    float final_bill_amount = calculate_final_bill(subtotal_amount,is_discount_applicable);
+    float final_bill_amount = calculate_final_bill(subtotal_amount,calculate_discount(number_of_tickets));
     float discount_amount = subtotal_amount - final_bill_amount;
 
     // Output
