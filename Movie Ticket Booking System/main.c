@@ -15,9 +15,9 @@ bool validate_name(char customer_name[]){
         printf("Error: Name cannot be empty.\n");
         return false;
     }
-    for(int name_index = 0; customer_name[name_index] != '\0'; name_index++){
-        unsigned char ch = (unsigned char)customer_name[name_index];
-        if (!isalpha(ch)){
+    for(int character_index = 0; customer_name[character_index] != '\0'; character_index++){
+        unsigned char current_character = (unsigned char)customer_name[character_index];
+        if (!isalpha(current_character)){
             printf("Error: Name cannot contain special characters.\n");
             return false;
         }
@@ -25,12 +25,12 @@ bool validate_name(char customer_name[]){
     return true;
 }
 
-float calculate_final_bill(float subtotal, bool discount){
+float calculate_final_bill(float subtotal_amount, bool discount){
     if(discount){
-        float discount_amount = subtotal * 10.0f / 100.0f;
-        return subtotal - discount_amount;
+        float discount_amount = subtotal_amount * 10.0f / 100.0f;
+        return subtotal_amount - discount_amount;
     }
-    return subtotal;
+    return subtotal_amount;
 }
 
 bool calculate_discount(int number_of_tickets){
@@ -57,16 +57,16 @@ float calculate_subtotal(int category_choice, int number_of_tickets){
     return (float)ticket_price * number_of_tickets;
 }
 
-void find_category(int category_choice,char category[]){
+void get_category_name(int category_choice,char category_name[]){
     switch(category_choice){
         case 1:
-            strcpy(category,"Standard");
+            strcpy(category_name,"Standard");
             return; 
         case 2:
-            strcpy(category,"Premium");
+            strcpy(category_name,"Premium");
             return;
         case 3:
-            strcpy(category,"Recliner");
+            strcpy(category_name,"Recliner");
             return;
         default:
             return;
@@ -108,24 +108,24 @@ int main(void){
         return 0;
     }
     
-    char category[50];
-    find_category(category_choice,category);
-    float subtotal = calculate_subtotal(category_choice,number_of_tickets);
-    if(subtotal < 0){
+    char category_name[50];
+    get_category_name(category_choice,category_name);
+    float subtotal_amount = calculate_subtotal(category_choice,number_of_tickets);
+    if(subtotal_amount < 0){
         printf("Error: Invalid Category.\n");
         return 0;
     }
-    bool discount = calculate_discount(number_of_tickets);
-    float final_bill = calculate_final_bill(subtotal,discount);
-    float discount_amount = subtotal - final_bill;
+    bool is_discount_applicable = calculate_discount(number_of_tickets);
+    float final_bill_amount = calculate_final_bill(subtotal_amount,is_discount_applicable);
+    float discount_amount = subtotal_amount - final_bill_amount;
 
     // Output
     printf("Customer: %s\n",customer_name);
-    printf("Ticket Category: %s\n",category);
+    printf("Ticket Category: %s\n",category_name);
     printf("Tickets: %d\n",number_of_tickets);
-    printf("Subtotal: %.2f\n",subtotal);
+    printf("Subtotal: %.2f\n",subtotal_amount);
     printf("Discount: %.2f\n",discount_amount);
-    printf("Final Bill: %.2f\n",final_bill);
+    printf("Final Bill: %.2f\n",final_bill_amount);
     
     return 0;
 }
