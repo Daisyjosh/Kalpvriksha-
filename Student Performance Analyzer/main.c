@@ -20,17 +20,17 @@ struct Student{
 };
 
 int is_integer(const char str[]){
-    int i = 0;
+    int character_index = 0;
 
     if (str[0] == '\0'){
         return 0;
     }
 
-    while (str[i] != '\0'){
-        if (!isdigit((unsigned char)str[i])){
+    while (str[character_index] != '\0'){
+        if (!isdigit((unsigned char)str[character_index])){
             return 0;
         }
-        i++;
+        character_index++;
     }
 
     return 1;
@@ -46,8 +46,7 @@ int parse_roll_number(const char str[], int *roll_no){
 
     long value = strtol(str, &end, 10);
 
-    if (errno == ERANGE || *end != '\0' ||
-        value < 1 || value > INT_MAX){
+    if (errno == ERANGE || *end != '\0' ||value < 1 || value > INT_MAX){
         return 0;
     }
 
@@ -56,17 +55,17 @@ int parse_roll_number(const char str[], int *roll_no){
 }
 
 int is_valid_name(const char str[]){
-    int i = 0;
+    int character_index = 0;
 
     if (str[0] == '\0'){
         return 0;
     }
 
-    while (str[i] != '\0'){
-        if (!isalpha((unsigned char)str[i])){
+    while (str[character_index] != '\0'){
+        if (!isalpha((unsigned char)str[character_index])){
             return 0;
         }
-        i++;
+        character_index++;
     }
 
     return 1;
@@ -82,8 +81,7 @@ int parse_mark(const char str[], int *mark){
 
     long value = strtol(str, &end, 10);
 
-    if (errno == ERANGE || *end != '\0' ||
-        value < 0 || value > 100){
+    if (errno == ERANGE || *end != '\0' || value < 0 || value > 100){
         return 0;
     }
 
@@ -136,18 +134,18 @@ void calculate_performance(char grade){
     }
 }
 
-void print_roll_numbers(int roll_numbers[],int roll_index,int total_students){
-    if (roll_index == total_students){
+void print_roll_numbers(int roll_numbers[],int roll_number_index,int total_students){
+    if (roll_number_index == total_students){
         return;
     }
 
-    printf("%d", roll_numbers[roll_index]);
+    printf("%d", roll_numbers[roll_number_index]);
 
-    if (roll_index < total_students - 1){
+    if (roll_number_index < total_students - 1){
         printf(" ");
     }
 
-    print_roll_numbers(roll_numbers,roll_index + 1,total_students);
+    print_roll_numbers(roll_numbers,roll_number_index + 1,total_students);
 }
 
 int main(void){
@@ -170,16 +168,16 @@ int main(void){
     struct Student students[MAX_STUDENTS];
 
     int student_count = 0;
-    int ch;
+    int input_character;
 
-    while ((ch = getchar()) != '\n' && ch != EOF){
-        if (!isspace((unsigned char)ch)){
+    while ((input_character = getchar()) != '\n' && input_character != EOF){
+        if (!isspace((unsigned char)input_character)){
             printf("Error: Invalid Input.\n");
             return 0;
         }
     }
 
-    for (int i = 0; i < total_students; i++){
+    for (int student_index = 0; student_index < total_students; student_index++){
         char line[MAX_LINE];
         char *tokens[MAX_TOKENS];
         int token_count = 0;
@@ -192,23 +190,23 @@ int main(void){
         }
 
         if (strchr(line, '\n') == NULL && !feof(stdin)){
-            while ((ch = getchar()) != '\n' && ch != EOF){
+            while ((input_character = getchar()) != '\n' && input_character != EOF){
             }
 
             printf("Error: Invalid Input.\n");
             return 0;
         }
 
-        char *token = strtok(line, " \t\r\n");
+        char *current_token = strtok(line, " \t\r\n");
 
-        while (token != NULL){
+        while (current_token != NULL){
             if (token_count >= MAX_TOKENS){
                 printf("Error: Invalid Input.\n");
                 return 0;
             }
 
-            tokens[token_count++] = token;
-            token = strtok(NULL, " \t\r\n");
+            tokens[token_count++] = current_token;
+            current_token = strtok(NULL, " \t\r\n");
         }
 
         if (token_count < 5){
@@ -223,8 +221,8 @@ int main(void){
 
         int marks_start_index = token_count - 3;
 
-        for (int j = 0; j < 3; j++){
-            if (!parse_mark(tokens[marks_start_index + j],&student.marks[j])){
+        for (int mark_index = 0; mark_index < 3; mark_index++){
+            if (!parse_mark(tokens[marks_start_index + mark_index],&student.marks[mark_index])){
                 printf("Error: Invalid Input.\n");
                 return 0;
             }
@@ -242,16 +240,16 @@ int main(void){
 
         size_t name_length = 0;
 
-        for (int j = 1; j < marks_start_index; j++){
-            if (!is_valid_name(tokens[j])){
+        for (int name_token_index = 1; name_token_index < marks_start_index; name_token_index++){
+            if (!is_valid_name(tokens[name_token_index])){
                 printf("Error: Invalid Input.\n");
                 return 0;
             }
 
-            size_t token_length = strlen(tokens[j]);
-            size_t space_length = (j > 1) ? 1 : 0;
+            size_t token_length = strlen(tokens[name_token_index]);
+            size_t space_length = (name_token_index > 1) ? 1 : 0;
 
-            if (name_length + space_length + token_length>= sizeof(student.name)){
+            if (name_length + space_length + token_length >= sizeof(student.name)){
                 printf("Error: Invalid Input.\n");
                 return 0;
             }
@@ -260,7 +258,7 @@ int main(void){
                 student.name[name_length++] = ' ';
             }
 
-            memcpy(student.name + name_length, tokens[j], token_length);
+            memcpy(student.name + name_length, tokens[name_token_index], token_length);
             name_length += token_length;
             student.name[name_length] = '\0';
         }
