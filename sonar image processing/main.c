@@ -4,6 +4,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
+#include <errno.h>
+#include <limits.h>
+#include <ctype.h>
 #define MAX 10
 
 void generate_matrix(int *base,int matrix_size){
@@ -82,12 +86,40 @@ int main(void){
 
     int *base = &matrix[0][0];
 
+    char input[100];
+    char *endptr;
+    long value;
+
     printf("Enter matrix size (2-10): ");
 
-    if(scanf("%d",&matrix_size) != 1 || matrix_size < 2 || matrix_size > 10){
+    if(fgets(input, sizeof(input), stdin) == NULL){
         printf("Error: Invalid matrix size.\n");
         return 1;
     }
+
+    if(input[0] == ' ' || input[0] == '\t' || input[0] == '\n'){
+        printf("Error: Invalid matrix size.\n");
+        return 1;
+    }
+
+    errno = 0;
+    value = strtol(input, &endptr, 10);
+
+    if(endptr == input || errno == ERANGE || value < 2 || value > 10){
+        printf("Error: Invalid matrix size.\n");
+        return 1;
+    }
+
+    while(isspace((unsigned char)*endptr)){
+        endptr++;
+    }
+
+    if(*endptr != '\0'){
+        printf("Error: Invalid matrix size.\n");
+        return 1;
+    }
+
+    matrix_size = (int)value;
 
     srand((unsigned int)time(NULL));
 
