@@ -1,3 +1,8 @@
+// Time Complexity: O(B)
+// Space Complexity: O(P+B) 
+
+// P - memory pool size
+// B - number of memory blocks
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -213,9 +218,9 @@ int find_suitable_block(MemoryManager *manager,size_t requested_size){
 }
 
 int find_allocation(MemoryManager *manager,uint64_t allocation_id){
-    for(size_t i=0;i<manager->block_count;i++){
-        if(manager->blocks[i].is_allocated&&manager->blocks[i].allocation_id==allocation_id){
-            return (int)i;
+    for(size_t index=0;index<manager->block_count;index++){
+        if(manager->blocks[index].is_allocated&&manager->blocks[index].allocation_id==allocation_id){
+            return (int)index;
         }
     }
 
@@ -229,8 +234,8 @@ void calculate_memory(MemoryManager *manager,size_t *allocated,size_t *allocated
     *largest_free=0;
     *allocated_blocks=0;
 
-    for(size_t i=0;i<manager->block_count;i++){
-        Block *block=&manager->blocks[i];
+    for(size_t index=0;index<manager->block_count;index++){
+        Block *block=&manager->blocks[index];
 
         if(block->is_allocated){
             *allocated+=block->size;
