@@ -472,14 +472,12 @@ void delete_file_command(const char *entry_name){
         return;
     }
 
-    // Return allocated blocks.
     for (size_t block_position = 0; block_position < file_node->allocated_block_count; block_position++){
         release_block(file_node->block_indices[block_position]);
     }
 
     free(file_node->block_indices);
 
-    // Remove the file from the circular list.
     remove_child(file_node);
 
     free(file_node);
@@ -557,7 +555,6 @@ VfsNode *resolve_directory(const char *path){
     while (path_component){
 
         if (strcmp(path_component, ".") == 0){
-            /* Current directory: no change required. */
         }else if (strcmp(path_component, "..") == 0){
 
             if (current_node->parent_directory){
