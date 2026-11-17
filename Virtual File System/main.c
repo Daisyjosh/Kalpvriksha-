@@ -49,6 +49,7 @@ size_t available_block_count = 0;
 VfsNode *root_directory = NULL;
 VfsNode *current_directory = NULL;
 
+// Remove leading and trailing whitespace from the input command.
 void trim_whitespace(char *text_buffer){
 
     size_t text_length = strlen(text_buffer);
@@ -70,6 +71,7 @@ void trim_whitespace(char *text_buffer){
     }
 }
 
+// Allocate and initialize a file or directory node.
 VfsNode *create_vfs_node(const char *entry_name, int is_directory){
 
     if (!entry_name || !*entry_name || strlen(entry_name) > VFS_MAX_NAME_LENGTH){
@@ -92,6 +94,7 @@ VfsNode *create_vfs_node(const char *entry_name, int is_directory){
     return node;
 }
 
+// Search a directory's circular child list for an entry with the given name.
 VfsNode *find_child(VfsNode *directory_node, const char *entry_name){
 
     if (!directory_node || !directory_node->is_directory ||
@@ -114,6 +117,7 @@ VfsNode *find_child(VfsNode *directory_node, const char *entry_name){
     return NULL;
 }
 
+// Insert a child at the tail of the parent's circular doubly linked list.
 int insert_child(VfsNode *parent_directory, VfsNode *child_node){
 
     if (!parent_directory || !child_node || !parent_directory->is_directory){
@@ -147,6 +151,7 @@ int insert_child(VfsNode *parent_directory, VfsNode *child_node){
     return 1;
 }
 
+// Detach a child node and reconnect its neighbouring list entries.
 void remove_child(VfsNode *child_node){
 
     if (!child_node || !child_node->parent_directory){
@@ -174,6 +179,7 @@ void remove_child(VfsNode *child_node){
     child_node->parent_directory = NULL;
 }
 
+// Initialize all disk blocks as free and link them in allocation order.
 void initialize_free_list(){
 
     free_list_head = NULL;
@@ -199,6 +205,7 @@ void initialize_free_list(){
     }
 }
 
+// Allocate the first available block by removing the head of the free list.
 int allocate_block(){
 
     if (free_list_head == NULL){
@@ -225,6 +232,7 @@ int allocate_block(){
     return block_index;
 }
 
+// Clear a released block and append its node to the tail of the free list.
 void release_block(int block_index){
 
     if (block_index < 0 || block_index >= VFS_BLOCK_COUNT){
@@ -250,6 +258,7 @@ void release_block(int block_index){
     available_block_count++;
 }
 
+// Allocate the virtual disk, free-block nodes, and root directory.
 int initialize_vfs(){
 
     virtual_disk = calloc(VFS_BLOCK_COUNT, sizeof(*virtual_disk));
@@ -273,6 +282,7 @@ int initialize_vfs(){
     return 1;
 }
 
+// Create a directory in the current working directory.
 void create_directory_command(const char *entry_name){
 
     if (!entry_name || !*entry_name){
@@ -301,6 +311,7 @@ void create_directory_command(const char *entry_name){
     printf("Directory '%s' created successfully.\n", entry_name);
 }
 
+// Create an empty file in the current working directory.
 void create_file_command(const char *entry_name){
 
     if (!entry_name || !*entry_name){
@@ -329,6 +340,7 @@ void create_file_command(const char *entry_name){
     printf("File '%s' created successfully.\n", entry_name);
 }
 
+// Replace a file's contents, allocating enough blocks to store the new data.
 void write_file_command(const char *entry_name, const char *file_content){
 
     VfsNode *file_node = find_child(current_directory, entry_name);
@@ -345,9 +357,11 @@ void write_file_command(const char *entry_name, const char *file_content){
 
     size_t content_length = strlen(file_content);
 
+    // Calculate the number of 512-byte blocks needed for the content.
     size_t required_block_count =
         (content_length + VFS_BLOCK_SIZE - 1) / VFS_BLOCK_SIZE;
 
+    // Include the file's existing blocks when checking overwrite capacity.
     if (required_block_count > available_block_count + file_node->allocated_block_count){
         printf("Error: Not enough disk space.\n");
         return;
@@ -365,6 +379,7 @@ void write_file_command(const char *entry_name, const char *file_content){
         }
     }
 
+    // Return the file's previously allocated blocks before allocating replacements.
     for (size_t block_position = 0; block_position < file_node->allocated_block_count; block_position++){
         release_block(file_node->block_indices[block_position]);
     }
@@ -394,6 +409,7 @@ void write_file_command(const char *entry_name, const char *file_content){
         new_block_indices[block_position] = block_index;
     }
 
+    // Copy the content into the allocated disk blocks in block-sized chunks.
     size_t content_offset = 0;
 
     for (size_t block_position = 0; block_position < required_block_count; block_position++){
@@ -419,6 +435,7 @@ void write_file_command(const char *entry_name, const char *file_content){
     printf("Data written successfully (size=%zu bytes).\n", content_length);
 }
 
+// Read the stored file content from its disk blocks in the original byte order.
 void read_file_command(const char *entry_name){
 
     VfsNode *file_node = find_child(current_directory, entry_name);
@@ -458,6 +475,7 @@ void read_file_command(const char *entry_name){
     printf("\n");
 }
 
+// Release a file's disk blocks and remove its node from the directory list.
 void delete_file_command(const char *entry_name){
 
     VfsNode *file_node = find_child(current_directory, entry_name);
@@ -485,6 +503,7 @@ void delete_file_command(const char *entry_name){
     printf("File deleted successfully.\n");
 }
 
+// Remove a directory only when it exists and has no child entries.
 void remove_directory_command(const char *entry_name){
 
     VfsNode *directory_node = find_child(current_directory, entry_name);
@@ -511,6 +530,7 @@ void remove_directory_command(const char *entry_name){
     printf("Directory removed successfully.\n");
 }
 
+// Recursively print parent directories to construct the current path.
 void print_path_recursive(VfsNode *node){
 
     if (!node || node == root_directory){
@@ -527,12 +547,14 @@ void print_path_recursive(VfsNode *node){
     printf("%s", node->entry_name);
 }
 
+// Display the absolute path of the current working directory.
 void print_working_directory_command(){
 
     print_path_recursive(current_directory);
     printf("\n");
 }
 
+// Resolve an absolute or relative path, handling '.' and '..' components.
 VfsNode *resolve_directory(const char *path){
 
     if (!path || !*path){
@@ -578,6 +600,7 @@ VfsNode *resolve_directory(const char *path){
     return current_node;
 }
 
+// Change the current working directory to the resolved target directory.
 void change_directory_command(const char *path){
 
     if (!path || !*path){
@@ -598,6 +621,7 @@ void change_directory_command(const char *path){
     print_working_directory_command();
 }
 
+// List the files and subdirectories in the given path or current directory.
 void list_directory_command(const char *path){
 
     VfsNode *directory_node =
@@ -627,6 +651,7 @@ void list_directory_command(const char *path){
     } while (current_node != directory_node->children);
 }
 
+// Display total, used, and available disk blocks and the usage percentage.
 void display_disk_usage_command(){
 
     size_t used_block_count = VFS_BLOCK_COUNT - available_block_count;
@@ -640,6 +665,7 @@ void display_disk_usage_command(){
     printf("Disk Usage: %.2f%%\n", disk_usage_percentage);
 }
 
+// Recursively free all child nodes and their allocated block-pointer arrays.
 void cleanup_directory(VfsNode *directory_node){
 
     if (!directory_node || !directory_node->children){
@@ -667,6 +693,7 @@ void cleanup_directory(VfsNode *directory_node){
     directory_node->children = NULL;
 }
 
+// Release the root tree, free-list storage, and virtual disk memory.
 void cleanup_vfs(){
 
     if (root_directory){
@@ -690,6 +717,7 @@ void cleanup_vfs(){
     available_block_count = 0;
 }
 
+// Parse the command and its arguments, then dispatch to the matching operation.
 void execute_command(char *command_line){
 
     trim_whitespace(command_line);
@@ -731,6 +759,7 @@ void execute_command(char *command_line){
             additional_argument++;
         }
     }
+    // Directory and file creation commands.
     if (strcmp(command_name, "mkdir") == 0){
 
         create_directory_command(command_argument);
@@ -739,6 +768,7 @@ void execute_command(char *command_line){
 
         create_file_command(command_argument);
 
+    // File content operations.
     }else if (strcmp(command_name, "write") == 0){
 
         if (!*command_argument || !additional_argument || !*additional_argument){
@@ -772,6 +802,7 @@ void execute_command(char *command_line){
 
         remove_directory_command(command_argument);
 
+    // Directory navigation and listing commands.
     }else if (strcmp(command_name, "ls") == 0){
 
         list_directory_command(command_argument);
@@ -784,6 +815,7 @@ void execute_command(char *command_line){
 
         print_working_directory_command();
 
+    // Disk information and program termination commands.
     }else if (strcmp(command_name, "df") == 0){
 
         display_disk_usage_command();
@@ -802,6 +834,7 @@ void execute_command(char *command_line){
     }
 }
 
+// Initialize the VFS and process user commands until EOF or the exit command.
 int main(){
 
     if (!initialize_vfs()){
