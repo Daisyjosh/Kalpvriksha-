@@ -229,20 +229,20 @@ int binarySearchTeam(int teamId){
 }
 
 void initializeTeams(void){
-    int i,j;
+    int teamIndex,roleIndex;
 
-    for(i=0;i<TEAM_COUNT;i++){
-        teams[i].teamId=i+1;
-        strcpy(teams[i].name,teamNames[i]);
-        teams[i].totalPlayers=0;
-        teams[i].averageBattingStrikeRate=0.0f;
-        teams[i].totalStrikeRate=0.0f;
-        teams[i].battingPlayerCount=0;
-        teams[i].head=NULL;
-        teams[i].tail=NULL;
+    for(teamIndex=0;teamIndex<TEAM_COUNT;teamIndex++){
+        teams[teamIndex].teamId=teamIndex+1;
+        strcpy(teams[teamIndex].name,teamNames[teamIndex]);
+        teams[teamIndex].totalPlayers=0;
+        teams[teamIndex].averageBattingStrikeRate=0.0f;
+        teams[teamIndex].totalStrikeRate=0.0f;
+        teams[teamIndex].battingPlayerCount=0;
+        teams[teamIndex].head=NULL;
+        teams[teamIndex].tail=NULL;
 
-        for(j=0;j<3;j++){
-            teams[i].roleHead[j]=NULL;
+        for(roleIndex=0;roleIndex<3;roleIndex++){
+            teams[teamIndex].roleHead[roleIndex]=NULL;
         }
     }
 }
@@ -328,17 +328,17 @@ void addPlayerToTeam(Player *player){
 }
 
 int playerIdExists(int playerId){
-    int i;
-    Player *current;
+    int teamIndex;
+    Player *currentPlayer;
 
-    for(i=0;i<teamCount;i++){
-        current=teams[i].head;
+    for(teamIndex=0;teamIndex<teamCount;teamIndex++){
+        currentPlayer=teams[teamIndex].head;
 
-        while(current!=NULL){
-            if(current->playerId==playerId){
+        while(currentPlayer!=NULL){
+            if(currentPlayer->playerId==playerId){
                 return 1;
             }
-            current=current->next;
+            currentPlayer=currentPlayer->next;
         }
     }
 
@@ -346,11 +346,11 @@ int playerIdExists(int playerId){
 }
 
 void initializePlayers(void){
-    int i;
+    int playerIndex;
     Player *player;
 
-    for(i=0;i<INITIAL_PLAYERS;i++){
-        player=createPlayer((InitialPlayer *)&initialPlayers[i]);
+    for(playerIndex=0;playerIndex<INITIAL_PLAYERS;playerIndex++){
+        player=createPlayer((InitialPlayer *)&initialPlayers[playerIndex]);
         addPlayerToTeam(player);
     }
 }
@@ -546,7 +546,7 @@ void displayPlayerGlobal(Player *player,char *teamName){
 
 void displayTeamPlayers(void){
     int teamId,teamIndex;
-    Player *current;
+    Player *currentPlayer;
 
     if(!readInt("Enter Team ID: ",&teamId)){
         return;
@@ -567,11 +567,11 @@ void displayTeamPlayers(void){
            "ID","Name","Role","Runs","Avg","SR","Wkts","ER","Perf.Index");
     printf("====================================================================================\n");
 
-    current=team->head;
+    currentPlayer=team->head;
 
-    while(current!=NULL){
-        displayPlayer(current);
-        current=current->next;
+    while(currentPlayer!=NULL){
+        displayPlayer(currentPlayer);
+        currentPlayer=currentPlayer->next;
     }
 
     printf("====================================================================================\n");
@@ -581,19 +581,19 @@ void displayTeamPlayers(void){
 
 void displayTeamsByStrikeRate(void){
     Team *sorted[MAX_TEAMS];
-    Team *temp;
-    int i,j;
+    Team *temporaryTeam;
+    int teamIndex,comparisonIndex;
 
-    for(i=0;i<teamCount;i++){
-        sorted[i]=&teams[i];
+    for(teamIndex=0;teamIndex<teamCount;teamIndex++){
+        sorted[teamIndex]=&teams[teamIndex];
     }
 
-    for(i=0;i<teamCount-1;i++){
-        for(j=0;j<teamCount-i-1;j++){
-            if(sorted[j]->averageBattingStrikeRate<sorted[j+1]->averageBattingStrikeRate){
-                temp=sorted[j];
-                sorted[j]=sorted[j+1];
-                sorted[j+1]=temp;
+    for(teamIndex=0;teamIndex<teamCount-1;teamIndex++){
+        for(comparisonIndex=0;comparisonIndex<teamCount-teamIndex-1;comparisonIndex++){
+            if(sorted[comparisonIndex]->averageBattingStrikeRate<sorted[comparisonIndex+1]->averageBattingStrikeRate){
+                temporaryTeam=sorted[comparisonIndex];
+                sorted[comparisonIndex]=sorted[comparisonIndex+1];
+                sorted[comparisonIndex+1]=temporaryTeam;
             }
         }
     }
@@ -603,12 +603,12 @@ void displayTeamsByStrikeRate(void){
     printf("%-5s %-20s %-12s %-15s\n","ID","Team Name","Avg Bat SR","Total Players");
     printf("=========================================================\n");
 
-    for(i=0;i<teamCount;i++){
+    for(teamIndex=0;teamIndex<teamCount;teamIndex++){
         printf("%-5d %-20s %-12.1f %-15d\n",
-               sorted[i]->teamId,
-               sorted[i]->name,
-               sorted[i]->averageBattingStrikeRate,
-               sorted[i]->totalPlayers);
+               sorted[teamIndex]->teamId,
+               sorted[teamIndex]->name,
+               sorted[teamIndex]->averageBattingStrikeRate,
+               sorted[teamIndex]->totalPlayers);
     }
 
     printf("=========================================================\n");
@@ -616,7 +616,7 @@ void displayTeamsByStrikeRate(void){
 
 void displayTopKPlayers(void){
     int teamId,teamIndex,role,k,count=0;
-    RoleNode *current;
+    RoleNode *currentRoleNode;
     char roleName[20];
 
     if(!readInt("Enter Team ID: ",&teamId)){
@@ -672,11 +672,11 @@ void displayTopKPlayers(void){
            "ID","Name","Role","Runs","Avg","SR","Wkts","ER","Perf.Index");
     printf("====================================================================================\n");
 
-    current=teams[teamIndex].roleHead[role-1];
+    currentRoleNode=teams[teamIndex].roleHead[role-1];
 
-    while(current!=NULL&&count<k){
-        displayPlayer(current->player);
-        current=current->next;
+    while(currentRoleNode!=NULL&&count<k){
+        displayPlayer(currentRoleNode->player);
+        currentRoleNode=currentRoleNode->next;
         count++;
     }
 
@@ -698,49 +698,49 @@ int heapHigherPriority(HeapNode a,HeapNode b){
     return a.current->player->playerId<b.current->player->playerId;
 }
 
-void heapifyUp(HeapNode heap[],int index){
-    int parent;
-    HeapNode temp;
+void heapifyUp(HeapNode heap[],int heapIndex){
+    int parentIndex;
+    HeapNode temporaryNode;
 
-    while(index>0){
-        parent=(index-1)/2;
+    while(heapIndex>0){
+        parentIndex=(heapIndex-1)/2;
 
-        if(heapHigherPriority(heap[parent],heap[index])){
+        if(heapHigherPriority(heap[parentIndex],heap[heapIndex])){
             break;
         }
 
-        temp=heap[parent];
-        heap[parent]=heap[index];
-        heap[index]=temp;
-        index=parent;
+        temporaryNode=heap[parentIndex];
+        heap[parentIndex]=heap[heapIndex];
+        heap[heapIndex]=temporaryNode;
+        heapIndex=parentIndex;
     }
 }
 
-void heapifyDown(HeapNode heap[],int heapSize,int index){
-    int left,right,largest;
-    HeapNode temp;
+void heapifyDown(HeapNode heap[],int heapSize,int heapIndex){
+    int leftChildIndex,rightChildIndex,highestPriorityIndex;
+    HeapNode temporaryNode;
 
     while(1){
-        left=2*index+1;
-        right=2*index+2;
-        largest=index;
+        leftChildIndex=2*heapIndex+1;
+        rightChildIndex=2*heapIndex+2;
+        highestPriorityIndex=heapIndex;
 
-        if(left<heapSize&&heapHigherPriority(heap[left],heap[largest])){
-            largest=left;
+        if(leftChildIndex<heapSize&&heapHigherPriority(heap[leftChildIndex],heap[highestPriorityIndex])){
+            highestPriorityIndex=leftChildIndex;
         }
 
-        if(right<heapSize&&heapHigherPriority(heap[right],heap[largest])){
-            largest=right;
+        if(rightChildIndex<heapSize&&heapHigherPriority(heap[rightChildIndex],heap[highestPriorityIndex])){
+            highestPriorityIndex=rightChildIndex;
         }
 
-        if(largest==index){
+        if(highestPriorityIndex==heapIndex){
             break;
         }
 
-        temp=heap[index];
-        heap[index]=heap[largest];
-        heap[largest]=temp;
-        index=largest;
+        temporaryNode=heap[heapIndex];
+        heap[heapIndex]=heap[highestPriorityIndex];
+        heap[highestPriorityIndex]=temporaryNode;
+        heapIndex=highestPriorityIndex;
     }
 }
 
@@ -766,7 +766,7 @@ HeapNode heapPop(HeapNode heap[],int *heapSize){
 void displayPlayersByRole(void){
     int role,heapSize=0;
     HeapNode heap[MAX_TEAMS],node;
-    RoleNode *current;
+    RoleNode *currentRoleNode;
     char roleName[20];
 
     while(1){
@@ -792,12 +792,12 @@ void displayPlayersByRole(void){
         strcpy(roleName,"All-rounders");
     }
 
-    for(int i=0;i<teamCount;i++){
-        current=teams[i].roleHead[role-1];
+    for(int teamIndex=0;teamIndex<teamCount;teamIndex++){
+        currentRoleNode=teams[teamIndex].roleHead[role-1];
 
-        if(current!=NULL){
-            node.current=current;
-            node.teamIndex=i;
+        if(currentRoleNode!=NULL){
+            node.current=currentRoleNode;
+            node.teamIndex=teamIndex;
             heapPush(heap,&heapSize,node);
         }
     }
@@ -810,12 +810,12 @@ void displayPlayersByRole(void){
 
     while(heapSize>0){
         node=heapPop(heap,&heapSize);
-        current=node.current;
+        currentRoleNode=node.current;
 
-        displayPlayerGlobal(current->player,teams[node.teamIndex].name);
+        displayPlayerGlobal(currentRoleNode->player,teams[node.teamIndex].name);
 
-        if(current->next!=NULL){
-            node.current=current->next;
+        if(currentRoleNode->next!=NULL){
+            node.current=currentRoleNode->next;
             heapPush(heap,&heapSize,node);
         }
     }
@@ -824,26 +824,26 @@ void displayPlayersByRole(void){
 }
 
 void freeMemory(void){
-    int i,j;
-    Player *current,*nextPlayer;
-    RoleNode *roleCurrent,*nextRole;
+    int teamIndex,roleIndex;
+    Player *currentPlayer,*nextPlayer;
+    RoleNode *currentRoleNode,*nextRoleNode;
 
-    for(i=0;i<teamCount;i++){
-        current=teams[i].head;
+    for(teamIndex=0;teamIndex<teamCount;teamIndex++){
+        currentPlayer=teams[teamIndex].head;
 
-        while(current!=NULL){
-            nextPlayer=current->next;
-            free(current);
-            current=nextPlayer;
+        while(currentPlayer!=NULL){
+            nextPlayer=currentPlayer->next;
+            free(currentPlayer);
+            currentPlayer=nextPlayer;
         }
 
-        for(j=0;j<3;j++){
-            roleCurrent=teams[i].roleHead[j];
+        for(roleIndex=0;roleIndex<3;roleIndex++){
+            currentRoleNode=teams[teamIndex].roleHead[roleIndex];
 
-            while(roleCurrent!=NULL){
-                nextRole=roleCurrent->next;
-                free(roleCurrent);
-                roleCurrent=nextRole;
+            while(currentRoleNode!=NULL){
+                nextRoleNode=currentRoleNode->next;
+                free(currentRoleNode);
+                currentRoleNode=nextRoleNode;
             }
         }
     }
